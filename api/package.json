@@ -1,0 +1,12 @@
+{
+  "name": "address-verifier-api",
+  "version": "1.0.0",
+  "description": "Backend serverless function for the Address Verifier app.",
+  "main": "verify.ts",
+  "dependencies": {
+    "@google/genai": "^1.41.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}

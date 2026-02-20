@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
-import { GoogleGenAI, Type } from '@google/genai';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { VerificationResult } from '../models/verification-result.model';
 
 interface AddressPrecomputation {
@@ -12,73 +13,34 @@ interface AddressPrecomputation {
   providedIn: 'root',
 })
 export class GeminiService {
-  private genAI: GoogleGenAI;
+  // Fix: Explicitly type `http` as `HttpClient` to resolve type inference issues.
+  // This ensures `this.http.post` is recognized and that its return type is correctly inferred,
+  // which in turn resolves the downstream error.
+  private http: HttpClient = inject(HttpClient);
 
-  constructor() {
-    if (!process.env.API_KEY) {
-      throw new Error("API_KEY environment variable not set");
-    }
-    this.genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  }
+  // The URL of your deployed serverless function. 
+  // '/api/verify' is a relative path that works seamlessly with hosts like Vercel.
+  private readonly backendUrl = '/api/verify'; 
 
   async verifyAddresses(
     address1: string,
     address2: string,
     precomputation: AddressPrecomputation
   ): Promise<VerificationResult> {
-    const model = 'gemini-2.5-flash';
-
-    const maxLength = Math.max(precomputation.normalizedAddress1.length, precomputation.normalizedAddress2.length);
-    const similarity = maxLength > 0 ? (1 - precomputation.levenshteinDistance / maxLength) * 100 : 100;
-
-    const prompt = `
-      Please analyze the following two addresses and determine if they refer to the exact same physical location.
-      Consider common abbreviations (e.g., St. for Street, Ave for Avenue, Apt for Apartment, etc.) and formatting differences.
-      
-      Address 1: "${address1}"
-      Address 2: "${address2}"
-
-      A preliminary client-side analysis was performed with the following results:
-      - Normalized Address 1 (lowercase, abbreviations expanded, punctuation removed): "${precomputation.normalizedAddress1}"
-      - Normalized Address 2 (lowercase, abbreviations expanded, punctuation removed): "${precomputation.normalizedAddress2}"
-      - Levenshtein distance between normalized addresses: ${precomputation.levenshteinDistance} (A lower number means more similar).
-      - Calculated similarity score: ${similarity.toFixed(2)}%.
-
-      Based on both the original addresses and this preliminary analysis, are these addresses the same? Provide your reasoning.
-
-      Respond only with the JSON object in the specified schema.
-    `;
-
     try {
-      const response = await this.genAI.models.generateContent({
-        model: model,
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              areSame: {
-                type: Type.BOOLEAN,
-                description: 'True if the addresses are the same, false otherwise.'
-              },
-              reasoning: {
-                type: Type.STRING,
-                description: 'A brief explanation for the decision.'
-              }
-            },
-            required: ["areSame", "reasoning"]
-          },
-        },
-      });
-
-      const jsonString = response.text.trim();
-      const result = JSON.parse(jsonString);
+      const payload = { address1, address2, precomputation };
       
-      return result as VerificationResult;
+      // Use Angular's HttpClient to make a POST request to your backend proxy.
+      const response$ = this.http.post<VerificationResult>(this.backendUrl, payload);
+      
+      // Convert the Observable to a Promise for the async/await syntax.
+      // FIX: Add explicit type to `result` to prevent type inference issues.
+      const result: VerificationResult = await firstValueFrom(response$);
+      
+      return result;
     } catch (error) {
-      console.error('Error calling Gemini API:', error);
-      throw new Error('Failed to verify addresses. Please check the console for more details.');
+      console.error('Error calling backend service:', error);
+      throw new Error('Failed to communicate with the verification service. Please check the console.');
     }
   }
 }
