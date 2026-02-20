@@ -1,0 +1,5 @@
+{
+  "name": "Address Verifier",
+  "description": "An intelligent app that compares two addresses to determine if they refer to the same physical location, accounting for common abbreviations like 'St' for 'Street' or 'Ave' for 'Avenue'.",
+  "requestFramePermissions": []
+}

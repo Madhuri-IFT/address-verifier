@@ -1,0 +1,154 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-800 dark:to-blue-900 flex items-center justify-center p-4 font-sans">
+  <main class="w-full max-w-4xl mx-auto">
+    <div class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div class="p-8">
+        <header class="text-center mb-8">
+          <h1 class="text-4xl font-bold text-gray-800 dark:text-white tracking-tight">Address Verifier</h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-2">Intelligently compare two addresses for equivalence.</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex flex-col">
+            <label for="address1" class="mb-2 font-semibold text-gray-700 dark:text-gray-300">Address 1</label>
+            <textarea id="address1" [ngModel]="address1()" (ngModelChange)="address1.set($event)" rows="4" class="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none text-gray-800 dark:text-gray-200" placeholder="e.g., 123 Main Street..."></textarea>
+          </div>
+          <div class="flex flex-col">
+            <label for="address2" class="mb-2 font-semibold text-gray-700 dark:text-gray-300">Address 2</label>
+            <textarea id="address2" [ngModel]="address2()" (ngModelChange)="address2.set($event)" rows="4" class="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none text-gray-800 dark:text-gray-200" placeholder="e.g., 123 Main St..."></textarea>
+          </div>
+        </div>
+
+        <div class="mt-8 flex justify-center">
+          <button (click)="onVerify()" [disabled]="isLoading()" class="w-full md:w-auto px-12 py-3 text-lg font-semibold text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 ease-in-out flex items-center justify-center">
+            @if (isLoading()) {
+              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Verifying...</span>
+            } @else {
+              <span>Verify Addresses</span>
+            }
+          </button>
+        </div>
+      </div>
+      
+      @if (verificationResult(); as result) {
+        <div class="border-t border-gray-200 dark:border-gray-700 p-8 animate-fade-in" 
+             [class.bg-green-50]="result.areSame"
+             [class.dark:bg-green-900/30]="result.areSame"
+             [class.bg-red-50]="!result.areSame"
+             [class.dark:bg-red-900/30]="!result.areSame">
+          <h2 class="text-2xl font-semibold mb-4 text-center"
+              [class.text-green-800]="result.areSame"
+              [class.dark:text-green-300]="result.areSame"
+              [class.text-red-800]="!result.areSame"
+              [class.dark:text-red-300]="!result.areSame">
+            @if (result.areSame) {
+              <span class="flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                Addresses Are the Same
+              </span>
+            } @else {
+              <span class="flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
+                Addresses Are Different
+              </span>
+            }
+          </h2>
+          <div class="mt-4 p-4 rounded-lg"
+               [class.bg-green-100]="result.areSame"
+               [class.dark:bg-green-800/40]="result.areSame"
+               [class.border-green-300]="result.areSame"
+               [class.dark:border-green-600]="result.areSame"
+               [class.bg-red-100]="!result.areSame"
+               [class.dark:bg-red-800/40]="!result.areSame"
+               [class.border-red-300]="!result.areSame"
+               [class.dark:border-red-600]="!result.areSame"
+               >
+              <h3 class="font-bold text-lg mb-2" 
+                  [class.text-green-900]="result.areSame"
+                  [class.dark:text-green-200]="result.areSame"
+                  [class.text-red-900]="!result.areSame"
+                  [class.dark:text-red-200]="!result.areSame">AI Reasoning:</h3>
+              <p class="text-gray-700 dark:text-gray-300">{{ result.reasoning }}</p>
+          </div>
+        </div>
+      }
+
+      @if (error()) {
+        <div class="border-t border-gray-200 dark:border-gray-700 p-6 bg-yellow-50 dark:bg-yellow-900/30 animate-fade-in">
+            <div class="flex items-center">
+                <svg class="h-6 w-6 text-yellow-500 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.03-1.742 3.03H4.42c-1.532 0-2.492-1.696-1.742-3.03l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-8a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" />
+                </svg>
+                <p class="text-yellow-800 dark:text-yellow-200 font-medium">{{ error() }}</p>
+            </div>
+        </div>
+      }
+
+      <div class="border-t border-gray-200 dark:border-gray-700 p-6 text-sm text-gray-600 dark:text-gray-400">
+        <button (click)="showApiInfo.set(!showApiInfo())" class="w-full text-left font-semibold flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md p-1 -m-1">
+          <span>How to use as a service</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-300" [class.rotate-180]="showApiInfo()" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        @if(showApiInfo()) {
+          <div class="mt-4 space-y-4 animate-fade-in">
+            <div>
+              <h4 class="font-bold text-gray-800 dark:text-gray-200">Method 1: URL Parameters</h4>
+              <p class="mt-1">You can invoke a verification by passing URL-encoded addresses as query parameters. The app will load and automatically run the check.</p>
+              <code class="block bg-gray-100 dark:bg-gray-800 p-2 rounded-md mt-2 text-xs overflow-x-auto">
+                your-app-url?address1=...&address2=...
+              </code>
+            </div>
+            <div>
+              <h4 class="font-bold text-gray-800 dark:text-gray-200">Method 2: Iframe & postMessage API</h4>
+              <p class="mt-1">For programmatic access, embed this app in an iframe and listen for the 'message' event to receive the JSON result.</p>
+              <pre class="block bg-gray-100 dark:bg-gray-800 p-2 rounded-md mt-2 text-xs overflow-x-auto"><code>
+&lt;!-- In your HTML --&gt;
+&lt;iframe id="verifier" src="your-app-url"&gt;&lt;/iframe&gt;
+
+&lt;!-- In your JavaScript --&gt;
+&lt;script&gt;
+  const iframe = document.getElementById('verifier');
+  
+  // Example: call after iframe loads
+  iframe.addEventListener('load', () => {
+    const addr1 = encodeURIComponent('123 Main St');
+    const addr2 = encodeURIComponent('123 Main Street');
+    iframe.src = \`your-app-url?address1=\${addr1}&address2=\${addr2}\`;
+  });
+
+  window.addEventListener('message', (event) => {
+    // IMPORTANT: For security, always check the origin
+    // if (event.origin !== 'your-app-origin') return;
+    
+    console.log('Result from verifier:', event.data);
+    // event.data will be:
+    // { areSame: boolean, reasoning: string }
+    // or { error: string }
+  }, false);
+&lt;/script&gt;
+              </code></pre>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </main>
+</div>
+
+<style>
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .rotate-180 {
+    transform: rotate(180deg);
+  }
+</style>
