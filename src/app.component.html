@@ -100,38 +100,13 @@
               <h4 class="font-bold text-gray-800 dark:text-gray-200">Method 1: URL Parameters</h4>
               <p class="mt-1">You can invoke a verification by passing URL-encoded addresses as query parameters. The app will load and automatically run the check.</p>
               <code class="block bg-gray-100 dark:bg-gray-800 p-2 rounded-md mt-2 text-xs overflow-x-auto">
-                your-app-url?address1=...&address2=...
+                {{ hostedUrl() }}?address1=...&address2=...
               </code>
             </div>
             <div>
               <h4 class="font-bold text-gray-800 dark:text-gray-200">Method 2: Iframe & postMessage API</h4>
               <p class="mt-1">For programmatic access, embed this app in an iframe and listen for the 'message' event to receive the JSON result.</p>
-              <pre class="block bg-gray-100 dark:bg-gray-800 p-2 rounded-md mt-2 text-xs overflow-x-auto"><code>
-&lt;!-- In your HTML --&gt;
-&lt;iframe id="verifier" src="your-app-url"&gt;&lt;/iframe&gt;
-
-&lt;!-- In your JavaScript --&gt;
-&lt;script&gt;
-  const iframe = document.getElementById('verifier');
-  
-  // Example: call after iframe loads
-  iframe.addEventListener('load', () => {
-    const addr1 = encodeURIComponent('123 Main St');
-    const addr2 = encodeURIComponent('123 Main Street');
-    iframe.src = \`your-app-url?address1=\${addr1}&address2=\${addr2}\`;
-  });
-
-  window.addEventListener('message', (event) => {
-    // IMPORTANT: For security, always check the origin
-    // if (event.origin !== 'your-app-origin') return;
-    
-    console.log('Result from verifier:', event.data);
-    // event.data will be:
-    // { areSame: boolean, reasoning: string }
-    // or { error: string }
-  }, false);
-&lt;/script&gt;
-              </code></pre>
+              <pre class="block bg-gray-100 dark:bg-gray-800 p-2 rounded-md mt-2 text-xs overflow-x-auto"><code>{{ iframeCodeExample() }}</code></pre>
             </div>
           </div>
         }

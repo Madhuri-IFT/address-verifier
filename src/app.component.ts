@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit, computed } from '@angular/core';
 import { DOCUMENT, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GeminiService } from './services/gemini.service';
@@ -12,7 +12,6 @@ import { VerificationResult } from './models/verification-result.model';
 })
 export class AppComponent implements OnInit {
   private readonly geminiService = inject(GeminiService);
-  // Fix: Explicitly type `document` as `Document` to resolve type inference issues.
   private readonly document: Document = inject(DOCUMENT);
 
   address1 = signal<string>('456 Oak Avenue, Springfield, IL 62704');
@@ -23,8 +22,47 @@ export class AppComponent implements OnInit {
   verificationResult = signal<VerificationResult | null>(null);
   showApiInfo = signal<boolean>(false);
 
+  // Signal to hold the live URL of the application
+  hostedUrl = signal<string>('your-app-url');
+
+  // Computed signal to generate the full code example with the live URL
+  iframeCodeExample = computed(() => {
+    const url = this.hostedUrl();
+    const origin = url.startsWith('http') ? new URL(url).origin : 'your-app-origin';
+    return `<!-- In your HTML -->
+<iframe id="verifier" src="${url}"></iframe>
+
+<!-- In your JavaScript -->
+<script>
+  const iframe = document.getElementById('verifier');
+  
+  // Example: call after iframe loads
+  iframe.addEventListener('load', () => {
+    const addr1 = encodeURIComponent('123 Main St');
+    const addr2 = encodeURIComponent('123 Main Street');
+    iframe.src = \`${url}?address1=\${addr1}&address2=\${addr2}\`;
+  });
+
+  window.addEventListener('message', (event) => {
+    // IMPORTANT: For security, always check the origin
+    // if (event.origin !== '${origin}') return;
+    
+    console.log('Result from verifier:', event.data);
+    // event.data will be:
+    // { areSame: boolean, reasoning: string }
+    // or { error: string }
+  }, false);
+</script>`;
+  });
+
   ngOnInit(): void {
     if (this.document.defaultView) {
+        // Set the live URL for the code examples
+        const currentUrl = new URL(this.document.defaultView.location.href);
+        const baseUrl = `${currentUrl.origin}${currentUrl.pathname}`;
+        this.hostedUrl.set(baseUrl);
+        
+        // Check for URL parameters to auto-verify
         const urlParams = new URLSearchParams(this.document.defaultView.location.search);
         const address1Param = urlParams.get('address1');
         const address2Param = urlParams.get('address2');

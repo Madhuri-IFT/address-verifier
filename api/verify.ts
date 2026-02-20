@@ -92,5 +92,4 @@ export default async function handler(request: any, response: any) {
     } catch (error) {
       console.error('Error calling Gemini API from backend:', error);
       response.status(500).json({ error: 'Failed to verify addresses via the backend service.' });
-    }
-}
+    }                                                                                                                                                                                                     }
